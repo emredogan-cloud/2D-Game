@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+.vite
+playwright-report
+test-results
+blob-report
+package-lock.json
+
+# Generated / binary / data assets (not hand-formatted)
+public/assets/
+tiled/
+frames/
+Game_example.webm
+
+# The reverse-engineering spec is a generated long-form document; do not reflow it.
+GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md
