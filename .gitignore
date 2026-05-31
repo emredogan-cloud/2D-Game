@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vite/
+
+# Test / coverage artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / local
+*.local
+.env
+.env.*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/
+
+# --- Reverse-engineering analysis artifacts (kept out of the code repo) ---
+# Large source video + extracted forensic frames are analysis inputs, not game
+# source. They are intentionally not versioned to keep the repo small/clean.
+# See docs/reports/phase-0-report.md (Deviations) for rationale.
+Game_example.webm
+frames/
