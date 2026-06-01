@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GAME } from "./constants";
 import { BootScene } from "../scenes/BootScene";
 import { PreloadScene } from "../scenes/PreloadScene";
-import { MainScene } from "../scenes/MainScene";
+import { MovementScene } from "../scenes/MovementScene";
 
 /**
  * Builds the Phaser game configuration from the design constants.
@@ -34,6 +34,6 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
     render: {
       antialias: false,
     },
-    scene: [BootScene, PreloadScene, MainScene],
+    scene: [BootScene, PreloadScene, MovementScene],
   };
 }
