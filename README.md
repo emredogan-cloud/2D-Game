@@ -4,10 +4,13 @@ A web-first **2D side-scrolling pixel-art platformer** with a painterly "floatin
 sky islands" theme. Run → jump across pits and floating islands → collect stars
 (+100) → avoid enemies. Built to run in any modern browser.
 
-> **Status: Phase 0 — Project Setup & Pre-production.** This repository currently
-> contains only the engineering scaffold (toolchain, CI, tests, engine skeleton).
-> **There is no gameplay yet** — that begins in Phase 1. See the roadmap in
-> [`GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md`](./GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md).
+> **Status: Phase 1 — Movement Prototype.** The hero controller (run / jump / fall /
+> land with momentum, air control, coyote-time + jump-buffer), a smoothed follow
+> camera, and a Tiled test level are in place. `npm run dev`, then **Arrows/A,D** to
+> move, **Space/W/Up** to jump, and the **backtick** key to toggle the debug overlay.
+> See the roadmap in
+> [`GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md`](./GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md)
+> and the phase reports in [`docs/reports/`](./docs/reports/).
 
 ## Stack
 
@@ -69,13 +72,15 @@ npm run typecheck && npm run lint && npm run format:check && npm test && npm run
 │   │   └── constants.ts     # SINGLE source of truth for design values
 │   ├── scenes/
 │   │   ├── BootScene.ts      # → Preload
-│   │   ├── PreloadScene.ts   # loader + progress bar → Main
-│   │   └── MainScene.ts      # Phase 0 placeholder (Phase 1: movement)
-│   ├── entities/           # (Phase 1+) hero, enemies, collectibles
+│   │   ├── PreloadScene.ts   # loader + progress bar → Movement
+│   │   └── MovementScene.ts  # Phase 1 movement prototype (level, camera, respawn)
+│   ├── entities/           # Player + pure FSM/jump-timer logic (enemies: Phase 2)
+│   ├── input/              # InputController (keyboard → abstract InputState)
+│   ├── debug/              # DebugOverlay (backtick-toggled)
 │   ├── systems/            # (Phase 2+) GameManager, EventBus, AudioManager…
 │   ├── ui/                 # (Phase 4+) HUD, pause overlay
 │   ├── types/              # shared TypeScript types
-│   └── utils/              # helpers
+│   └── utils/              # helpers (kinematics, …)
 ├── tests/
 │   ├── unit/               # Vitest specs (pure logic/data)
 │   └── e2e/                # Playwright specs (boots the real canvas)
@@ -100,8 +105,8 @@ these numbers — game-feel is one diffable file.
 
 | Phase | Focus                                          |
 | ----- | ---------------------------------------------- |
-| **0** | Project setup & CI (this commit)               |
-| 1     | Movement prototype (character controller)      |
+| 0     | Project setup & CI ✅                          |
+| **1** | Movement prototype (character controller) ✅   |
 | 2     | Core gameplay systems (stars, enemies, score)  |
 | 3     | Level & world systems (Tiled loader, parallax) |
 | 4     | UI, HUD & audio                                |
