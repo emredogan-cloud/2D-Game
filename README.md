@@ -4,14 +4,15 @@ A web-first **2D side-scrolling pixel-art platformer** with a painterly "floatin
 sky islands" theme. Run → jump across pits and floating islands → collect stars
 (+100) → avoid enemies. Built to run in any modern browser.
 
-> **Status: Phase 2 — Core Gameplay Systems.** On top of the Phase 1 controller:
-> stars + score, solid/breakable crates, patrolling snail/slime enemies with
-> stomp-vs-damage, pit death, lives + checkpoint respawn, and win/lose — owned by a
-> `GameManager` and routed through a typed `EventBus`. `npm run dev`, then
-> **Arrows/A,D** to move, **Space/W/Up** to jump, and the **backtick** key to toggle
-> the debug overlay (state/score/lives). See the roadmap in
-> [`GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md`](./GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md)
-> and the phase reports in [`docs/reports/`](./docs/reports/).
+> **Status: Phase 3 — Level & World Systems.** The world is now **fully
+> data-driven**: levels load from Tiled `.tmj` (ground/platforms/islands/one-way/
+> decoration + an object layer that spawns every entity), with a 4-layer parallax
+> background, map-derived camera bounds, and goal→next-level flow carrying
+> score/lives. `npm run dev`, then **Arrows/A,D** to move, **Space/W/Up** to jump,
+> and the **backtick** key for the debug overlay. To add a level, see
+> [`docs/level-authoring.md`](./docs/level-authoring.md). The roadmap lives in
+> [`GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md`](./GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md);
+> phase reports in [`docs/reports/`](./docs/reports/).
 
 ## Stack
 
@@ -64,8 +65,9 @@ npm run typecheck && npm run lint && npm run format:check && npm test && npm run
 │   └── assets/
 │       ├── sprites/        # sprite atlases (Phase 5)
 │       ├── audio/          # BGM + SFX (Phase 4)
-│       ├── tilemaps/       # exported Tiled .tmj maps (loaded at runtime)
-│       └── tilesets/       # tileset images
+│       ├── levels/         # Tiled .tmj levels (level-01, level-02, …)
+│       ├── tilemaps/       # (Phase 0 placeholder map)
+│       └── tilesets/       # tileset images (world-tiles.png)
 ├── src/
 │   ├── main.ts             # Phaser.Game bootstrap (HMR-safe)
 │   ├── config/
@@ -74,13 +76,13 @@ npm run typecheck && npm run lint && npm run format:check && npm test && npm run
 │   ├── scenes/
 │   │   ├── BootScene.ts      # → Preload
 │   │   ├── PreloadScene.ts   # loader + progress bar → Movement
-│   │   └── MovementScene.ts  # gameplay scene: level, camera, stars/enemies/crates, respawn
+│   │   └── MovementScene.ts  # data-driven gameplay scene (loads .tmj, parallax, level flow)
 │   ├── entities/           # Player, Star, Crate, Enemy/Snail/Slime, Checkpoint, Goal (+ pure logic)
 │   ├── input/              # InputController (keyboard → abstract InputState)
 │   ├── debug/              # DebugOverlay (backtick-toggled)
-│   ├── systems/            # EventBus, GameManager, combat (AudioManager: Phase 4)
+│   ├── systems/            # EventBus, GameManager, combat, LevelLoader, ObjectSpawner, ParallaxBackground, cameraView, levelParse
 │   ├── ui/                 # (Phase 4+) HUD, pause overlay
-│   ├── types/              # shared TypeScript types
+│   ├── types/              # shared TypeScript types (incl. Tiled .tmj shapes)
 │   └── utils/              # helpers (kinematics, …)
 ├── tests/
 │   ├── unit/               # Vitest specs (pure logic/data)
@@ -93,8 +95,9 @@ npm run typecheck && npm run lint && npm run format:check && npm test && npm run
 ### Tiled / level convention
 
 Levels are authored in Tiled and **exported as `.tmj` (JSON)** to
-`public/assets/tilemaps/`; tile size is `32×32` (matches `GAME.TILE_SIZE`). See
-[`tiled/README.md`](./tiled/README.md) for layer naming and the export workflow.
+`public/assets/levels/`; tile size is `32×32` (matches `GAME.TILE_SIZE`). The full
+layer/object conventions and "how to add a level" are in
+[`docs/level-authoring.md`](./docs/level-authoring.md).
 
 ### Design constants
 
@@ -104,12 +107,12 @@ these numbers — game-feel is one diffable file.
 
 ## Roadmap
 
-| Phase | Focus                                            |
-| ----- | ------------------------------------------------ |
-| 0     | Project setup & CI ✅                            |
-| 1     | Movement prototype (character controller) ✅     |
-| **2** | Core gameplay systems (stars, enemies, score) ✅ |
-| 3     | Level & world systems (Tiled loader, parallax)   |
-| 4     | UI, HUD & audio                                  |
-| 5     | Content, art integration & polish                |
-| 6     | Optimization, mobile & deployment                |
+| Phase | Focus                                             |
+| ----- | ------------------------------------------------- |
+| 0     | Project setup & CI ✅                             |
+| 1     | Movement prototype (character controller) ✅      |
+| 2     | Core gameplay systems (stars, enemies, score) ✅  |
+| **3** | Level & world systems (Tiled loader, parallax) ✅ |
+| 4     | UI, HUD & audio                                   |
+| 5     | Content, art integration & polish                 |
+| 6     | Optimization, mobile & deployment                 |

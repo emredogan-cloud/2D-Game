@@ -11,10 +11,10 @@ export class Slime extends Enemy {
     scene: Phaser.Scene,
     x: number,
     y: number,
-    groundLayer: Phaser.Tilemaps.TilemapLayer,
+    collisionLayers: Phaser.Tilemaps.TilemapLayer[],
   ) {
     ensureRectTexture(scene, SLIME_TEXTURE_KEY, 24, 20, 0x55a630, 0x2f5e18);
-    super(scene, x, y, SLIME_TEXTURE_KEY, "slime", GAMEPLAY.SLIME_SPEED, groundLayer);
+    super(scene, x, y, SLIME_TEXTURE_KEY, "slime", GAMEPLAY.SLIME_SPEED, collisionLayers);
     (this.body as Phaser.Physics.Arcade.Body).setSize(22, 18);
   }
 }
