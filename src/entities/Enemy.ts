@@ -15,7 +15,7 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
   readonly kind: string;
   protected dir: PatrolDirection = -1;
   private readonly speed: number;
-  private readonly groundLayer: Phaser.Tilemaps.TilemapLayer;
+  private readonly collisionLayers: Phaser.Tilemaps.TilemapLayer[];
   private defeated = false;
 
   constructor(
@@ -25,12 +25,12 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
     textureKey: string,
     kind: string,
     speed: number,
-    groundLayer: Phaser.Tilemaps.TilemapLayer,
+    collisionLayers: Phaser.Tilemaps.TilemapLayer[],
   ) {
     super(scene, x, y, textureKey);
     this.kind = kind;
     this.speed = speed;
-    this.groundLayer = groundLayer;
+    this.collisionLayers = collisionLayers;
     scene.add.existing(this);
     scene.physics.add.existing(this);
     (this.body as ArcadeBody).setCollideWorldBounds(false);
@@ -43,10 +43,13 @@ export abstract class Enemy extends Phaser.Physics.Arcade.Sprite {
     const grounded = body.blocked.down;
     const probeX = this.x + this.dir * (body.halfWidth + 2);
     const probeY = body.bottom + 2;
-    const tileAhead = this.groundLayer.getTileAtWorldXY(probeX, probeY);
+    // Edge = no solid tile ahead/below in ANY collision layer (ground/platforms/islands).
+    const tileAhead = this.collisionLayers.some(
+      (layer) => layer.getTileAtWorldXY(probeX, probeY) !== null,
+    );
     // Only treat a missing tile as an edge when grounded (so a falling enemy
     // that hasn't landed yet doesn't jitter its direction mid-air).
-    const edgeAhead = grounded && tileAhead === null;
+    const edgeAhead = grounded && !tileAhead;
 
     this.dir = nextPatrolDirection(this.dir, {
       blockedLeft: body.blocked.left,

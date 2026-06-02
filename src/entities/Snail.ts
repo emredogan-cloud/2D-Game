@@ -11,10 +11,10 @@ export class Snail extends Enemy {
     scene: Phaser.Scene,
     x: number,
     y: number,
-    groundLayer: Phaser.Tilemaps.TilemapLayer,
+    collisionLayers: Phaser.Tilemaps.TilemapLayer[],
   ) {
     ensureRectTexture(scene, SNAIL_TEXTURE_KEY, 24, 18, 0x8a5a2b, 0x4e2f12);
-    super(scene, x, y, SNAIL_TEXTURE_KEY, "snail", GAMEPLAY.SNAIL_SPEED, groundLayer);
+    super(scene, x, y, SNAIL_TEXTURE_KEY, "snail", GAMEPLAY.SNAIL_SPEED, collisionLayers);
     (this.body as Phaser.Physics.Arcade.Body).setSize(22, 16);
   }
 }
