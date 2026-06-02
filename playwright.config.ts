@@ -10,9 +10,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  // Cap local workers: many simultaneous headless WebGL canvases can starve the
-  // GPU/driver and slow scene boot past timeouts. CI runs fully serial.
-  workers: process.env.CI ? 1 : 2,
+  // Run E2E serially: the Phase 3 scenes (parallax + tilemap + entities) are heavy
+  // enough that multiple simultaneous headless WebGL canvases starve the GPU/driver
+  // and slow scene boot past timeouts. CI is serial too.
+  workers: 1,
   reporter: process.env.CI ? [["html", { open: "never" }], ["list"]] : "list",
   use: {
     baseURL: `http://localhost:${PORT}`,

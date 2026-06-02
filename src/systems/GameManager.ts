@@ -12,6 +12,8 @@ export interface RunState {
 export interface GameManagerOptions {
   startingLives: number;
   spawn: { x: number; y: number };
+  /** Optional seed for cross-level persistence (carry score/lives into a new level). */
+  initial?: { score?: number; lives?: number };
 }
 
 /**
@@ -28,13 +30,15 @@ export interface GameManagerOptions {
  */
 export class GameManager {
   private readonly bus: EventBus;
-  private readonly startingLives: number;
+  private readonly initialScore: number;
+  private readonly initialLives: number;
   private readonly initialSpawn: { x: number; y: number };
   private state: RunState;
 
   constructor(bus: EventBus, opts: GameManagerOptions) {
     this.bus = bus;
-    this.startingLives = opts.startingLives;
+    this.initialScore = opts.initial?.score ?? 0;
+    this.initialLives = opts.initial?.lives ?? opts.startingLives;
     this.initialSpawn = { x: opts.spawn.x, y: opts.spawn.y };
     this.state = this.freshState();
 
@@ -45,8 +49,8 @@ export class GameManager {
 
   private freshState(): RunState {
     return {
-      score: 0,
-      lives: this.startingLives,
+      score: this.initialScore,
+      lives: this.initialLives,
       checkpoint: { ...this.initialSpawn },
       status: "playing",
     };
