@@ -4,11 +4,12 @@ A web-first **2D side-scrolling pixel-art platformer** with a painterly "floatin
 sky islands" theme. Run → jump across pits and floating islands → collect stars
 (+100) → avoid enemies. Built to run in any modern browser.
 
-> **Status: Phase 1 — Movement Prototype.** The hero controller (run / jump / fall /
-> land with momentum, air control, coyote-time + jump-buffer), a smoothed follow
-> camera, and a Tiled test level are in place. `npm run dev`, then **Arrows/A,D** to
-> move, **Space/W/Up** to jump, and the **backtick** key to toggle the debug overlay.
-> See the roadmap in
+> **Status: Phase 2 — Core Gameplay Systems.** On top of the Phase 1 controller:
+> stars + score, solid/breakable crates, patrolling snail/slime enemies with
+> stomp-vs-damage, pit death, lives + checkpoint respawn, and win/lose — owned by a
+> `GameManager` and routed through a typed `EventBus`. `npm run dev`, then
+> **Arrows/A,D** to move, **Space/W/Up** to jump, and the **backtick** key to toggle
+> the debug overlay (state/score/lives). See the roadmap in
 > [`GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md`](./GAME_REVERSE_ENGINEERING_ROADMAP_AND_EXECUTION_PROMPTS.md)
 > and the phase reports in [`docs/reports/`](./docs/reports/).
 
@@ -73,11 +74,11 @@ npm run typecheck && npm run lint && npm run format:check && npm test && npm run
 │   ├── scenes/
 │   │   ├── BootScene.ts      # → Preload
 │   │   ├── PreloadScene.ts   # loader + progress bar → Movement
-│   │   └── MovementScene.ts  # Phase 1 movement prototype (level, camera, respawn)
-│   ├── entities/           # Player + pure FSM/jump-timer logic (enemies: Phase 2)
+│   │   └── MovementScene.ts  # gameplay scene: level, camera, stars/enemies/crates, respawn
+│   ├── entities/           # Player, Star, Crate, Enemy/Snail/Slime, Checkpoint, Goal (+ pure logic)
 │   ├── input/              # InputController (keyboard → abstract InputState)
 │   ├── debug/              # DebugOverlay (backtick-toggled)
-│   ├── systems/            # (Phase 2+) GameManager, EventBus, AudioManager…
+│   ├── systems/            # EventBus, GameManager, combat (AudioManager: Phase 4)
 │   ├── ui/                 # (Phase 4+) HUD, pause overlay
 │   ├── types/              # shared TypeScript types
 │   └── utils/              # helpers (kinematics, …)
@@ -103,12 +104,12 @@ these numbers — game-feel is one diffable file.
 
 ## Roadmap
 
-| Phase | Focus                                          |
-| ----- | ---------------------------------------------- |
-| 0     | Project setup & CI ✅                          |
-| **1** | Movement prototype (character controller) ✅   |
-| 2     | Core gameplay systems (stars, enemies, score)  |
-| 3     | Level & world systems (Tiled loader, parallax) |
-| 4     | UI, HUD & audio                                |
-| 5     | Content, art integration & polish              |
-| 6     | Optimization, mobile & deployment              |
+| Phase | Focus                                            |
+| ----- | ------------------------------------------------ |
+| 0     | Project setup & CI ✅                            |
+| 1     | Movement prototype (character controller) ✅     |
+| **2** | Core gameplay systems (stars, enemies, score) ✅ |
+| 3     | Level & world systems (Tiled loader, parallax)   |
+| 4     | UI, HUD & audio                                  |
+| 5     | Content, art integration & polish                |
+| 6     | Optimization, mobile & deployment                |

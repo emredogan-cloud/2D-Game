@@ -41,6 +41,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private playerState: PlayerState = "idle";
   private coyoteMs = 0;
   private bufferMs = 0;
+  private invulnMs = 0;
+  private hurtLockoutMs = 0;
   private facing: 1 | -1 = 1;
   private readonly controls: InputController;
 
@@ -66,51 +68,84 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     super.preUpdate(time, delta);
     const dt = delta / 1000;
     const body = this.body as ArcadeBody;
+
+    // --- hurt timers + invulnerability blink ---
+    this.invulnMs = Math.max(0, this.invulnMs - delta);
+    this.hurtLockoutMs = Math.max(0, this.hurtLockoutMs - delta);
+    this.setAlpha(this.invulnMs > 0 && Math.floor(this.invulnMs / 90) % 2 === 1 ? 0.4 : 1);
+    // While locked out (just took knockback), input is ignored so the knockback
+    // velocity rides out; normal movement feel is otherwise unchanged.
+    const locked = this.hurtLockoutMs > 0;
+
     const grounded = body.blocked.down || body.touching.down;
     const input = this.controls.sample();
 
     // --- coyote-time + jump-buffer timers ---
     this.coyoteMs = updateCoyote(this.coyoteMs, grounded, delta, GAME.HERO_COYOTE_MS);
-    this.bufferMs = updateBuffer(this.bufferMs, input.jumpPressed, delta, GAME.HERO_JUMP_BUFFER_MS);
+    this.bufferMs = updateBuffer(
+      this.bufferMs,
+      !locked && input.jumpPressed,
+      delta,
+      GAME.HERO_JUMP_BUFFER_MS,
+    );
 
     // --- jump (single-jump: consuming zeroes BOTH timers) ---
     let jumpStarted = false;
-    if (canConsumeJump(this.coyoteMs, this.bufferMs)) {
+    if (!locked && canConsumeJump(this.coyoteMs, this.bufferMs)) {
       body.setVelocityY(GAME.HERO_JUMP_VELOCITY);
       this.coyoteMs = 0;
       this.bufferMs = 0;
       jumpStarted = true;
     }
     // variable jump height: releasing while still rising trims the ascent.
-    if (input.jumpReleased && body.velocity.y < 0) {
+    if (!locked && input.jumpReleased && body.velocity.y < 0) {
       body.setVelocityY(body.velocity.y * GAME.HERO_JUMP_CUT_MULTIPLIER);
     }
 
     // --- horizontal movement (manual integration) ---
-    const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-    const airFactor = grounded ? 1 : GAME.HERO_AIR_CONTROL;
-    let vx = body.velocity.x;
-    if (dir !== 0) {
-      const turning = vx !== 0 && Math.sign(vx) !== dir;
-      const accel = (turning ? GAME.HERO_ACCEL + GAME.HERO_RUN_DECEL : GAME.HERO_ACCEL) * airFactor;
-      vx = Phaser.Math.Clamp(vx + dir * accel * dt, -GAME.HERO_RUN_SPEED, GAME.HERO_RUN_SPEED);
-      this.facing = dir > 0 ? 1 : -1;
-    } else {
-      const drop = GAME.HERO_DRAG * airFactor * dt;
-      vx = Math.abs(vx) <= drop ? 0 : vx - Math.sign(vx) * drop;
+    const dir = locked ? 0 : (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    if (!locked) {
+      const airFactor = grounded ? 1 : GAME.HERO_AIR_CONTROL;
+      let vx = body.velocity.x;
+      if (dir !== 0) {
+        const turning = vx !== 0 && Math.sign(vx) !== dir;
+        const accel =
+          (turning ? GAME.HERO_ACCEL + GAME.HERO_RUN_DECEL : GAME.HERO_ACCEL) * airFactor;
+        vx = Phaser.Math.Clamp(vx + dir * accel * dt, -GAME.HERO_RUN_SPEED, GAME.HERO_RUN_SPEED);
+        this.facing = dir > 0 ? 1 : -1;
+      } else {
+        const drop = GAME.HERO_DRAG * airFactor * dt;
+        vx = Math.abs(vx) <= drop ? 0 : vx - Math.sign(vx) * drop;
+      }
+      body.setVelocityX(vx);
     }
-    body.setVelocityX(vx);
+    // When locked, body.velocity.x is left as the knockback set it.
     this.setFlipX(this.facing === -1);
 
     // --- behaviour/animation state machine ---
     this.playerState = nextPlayerState(this.playerState, {
       grounded,
       vy: body.velocity.y,
-      hasHorizontalInput: dir !== 0,
-      speedX: Math.abs(vx),
+      hasHorizontalInput: !locked && dir !== 0,
+      speedX: Math.abs(body.velocity.x),
       jumpStarted,
       runEpsilon: GAME.HERO_RUN_EPSILON,
     });
+  }
+
+  /**
+   * Apply damage knockback + an invulnerability window. Returns false (and does
+   * nothing) if currently invulnerable. The brief control lockout lets the
+   * knockback ride before manual horizontal integration resumes.
+   */
+  hurt(knockbackX: number, knockbackY: number, invulnMs: number, lockoutMs: number): boolean {
+    if (this.invulnMs > 0) return false;
+    const body = this.body as ArcadeBody;
+    body.setVelocity(knockbackX, knockbackY);
+    this.invulnMs = invulnMs;
+    this.hurtLockoutMs = lockoutMs;
+    this.facing = knockbackX >= 0 ? 1 : -1;
+    return true;
   }
 
   /**
@@ -123,6 +158,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     body.setVelocity(0, 0);
     this.coyoteMs = 0;
     this.bufferMs = 0;
+    this.invulnMs = 0;
+    this.hurtLockoutMs = 0;
+    this.setAlpha(1);
     this.playerState = "idle";
   }
 
@@ -135,6 +173,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   get isGrounded(): boolean {
     const body = this.body as ArcadeBody;
     return body.blocked.down || body.touching.down;
+  }
+  get isInvulnerable(): boolean {
+    return this.invulnMs > 0;
   }
   get velocityX(): number {
     return (this.body as ArcadeBody).velocity.x;
